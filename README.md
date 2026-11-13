@@ -6,7 +6,7 @@
 - 文脈 131,072 トークン、同時 24 本
 - 単独 約90 tok/s、24本同時で合計 約600 tok/s(手元の実測)
 
-解説記事: (Qiita の URL)
+解説記事: [12GBのGPU2枚で27BのLLMを24人同時に使う(Qiita)](https://qiita.com/nakanokensetsu/items/66e136acefd5a54b2f1d)
 
 ## 中身
 
