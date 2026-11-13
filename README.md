@@ -15,7 +15,7 @@
 | `setup.sh` | venv 作成 → vLLM 0.32.0 → パッチ → プラグインのフォークを入れる |
 | `requirements-lock.txt` | 動作確認した環境のパッケージの版(vLLM 0.32.0、torch 2.13.0 など200個)をすべて固定 |
 | `vllm-patch/vllm-0.32.0-bonsai.patch` | vLLM 0.32.0 への差分(27ファイル)。OSCAR KV(回転+低ビット)、優先度による追い出し、prefill のステップ上限、埋め込みの SSD 化、WSL2 での KV 退避の修正、TurboQuant 高速化([vllm#53060](https://github.com/vllm-project/vllm/pull/53060) の移植)など |
-| `model/prepare_model.sh` | 重みのダウンロード+画像用のビジョンタワー追加+埋め込みの書き出し |
+| `model/prepare_model.sh` | 重みのダウンロード+画像用のビジョンタワー追加+[日本語で学習し直した MTP ヘッド](https://huggingface.co/nakakennnn/Ternary-Bonsai-2-27B-MTP-ja)への差し替え+埋め込みの書き出し |
 | `serve.sh` | 起動スクリプト。機能はすべて環境変数でオン/オフ |
 | `script_ban/` | 指定した文字種(キリル文字など)を出さない logits processor |
 | `ssd_embed/` | 埋め込みを SSD に置くための書き出しスクリプトと、GPU に残す語の一覧 |
