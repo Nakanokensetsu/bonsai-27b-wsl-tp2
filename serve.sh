@@ -9,7 +9,7 @@ MODEL_DIR=${MODEL_DIR:-$ROOT/models/bonsai-27b}
 PORT=${PORT:-8000}
 MEM=${MEM:-0.72}          # lower it if the GPU also drives a display
 SEQS=${SEQS:-24}          # requests decoded at the same time
-KV=${KV:-turboquant_k3v2_oscar}   # or turboquant_4bit_nc (vLLM's TurboQuant) / auto (bf16)
+export KV=${KV:-turboquant_k3v2_oscar}   # exported: bonsai_ext reads it when sizing the KV page. or turboquant_4bit_nc (vLLM's TurboQuant) / auto (bf16)
 TEMPLATE=${TEMPLATE:-}    # optional chat template (.jinja)
 
 C=$ROOT/cuda130/nvidia/cu13
