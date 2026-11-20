@@ -4,7 +4,7 @@
 
 - OpenAI 互換 API(思考・ツール呼び出し・画像入力)
 - 文脈 131,072 トークン、同時 24 本
-- 単独 約95 tok/s、24本同時で合計 約470 tok/s(1本あたり約21 tok/s、手元の実測・vLLM 0.34.0)
+- 単独 約95 tok/s、16本同時で合計 約470 tok/s(1本あたり約32)、24本同時で合計 約470 tok/s(1本あたり約21)(手元の実測・vLLM 0.34.0)
 
 解説記事: [12GBのGPU2枚で27BのLLMを24人同時に使う(Qiita)](https://qiita.com/nakanokensetsu/items/66e136acefd5a54b2f1d)
 
