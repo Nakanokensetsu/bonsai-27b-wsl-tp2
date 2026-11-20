@@ -6,7 +6,7 @@ from setuptools import setup
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
 nvcc = [
-    "-O3", "--use_fast_math", "-std=c++17", "--expt-relaxed-constexpr",
+    "-O3", "--use_fast_math", "-std=c++20", "--expt-relaxed-constexpr",
     "-U__CUDA_NO_HALF_OPERATORS__", "-U__CUDA_NO_HALF_CONVERSIONS__",
     "-U__CUDA_NO_BFLOAT16_CONVERSIONS__", "-U__CUDA_NO_HALF2_OPERATORS__",
     "-gencode", "arch=compute_120,code=sm_120",
@@ -18,7 +18,7 @@ setup(
     ext_modules=[CUDAExtension(
         "_turboquant_C",
         ["main.cpp", "kernel.cu", "mma_kernel.cu"],
-        extra_compile_args={"cxx": ["-O3", "-std=c++17"], "nvcc": nvcc},
+        extra_compile_args={"cxx": ["-O3", "-std=c++20"], "nvcc": nvcc},
     )],
     cmdclass={"build_ext": BuildExtension.with_options(use_ninja=True)},
 )

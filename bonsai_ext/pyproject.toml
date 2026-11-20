@@ -1,0 +1,19 @@
+[project]
+name = "bonsai-ext"
+version = "0.34.0"
+description = "Bonsai additions for stock vLLM 0.34 (OSCAR KV, scheduler, worker, SSD embeddings, vision offload)"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.entry-points."vllm.general_plugins"]
+bonsai_ext = "bonsai_ext:register"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+bonsai_ext = ["vendor/*.py", "*.so"]

@@ -1,6 +1,6 @@
 # bonsai-27b-wsl-tp2
 
-**Ternary-Bonsai-2-27B**(27B、重み2bit)を、**12GB の GPU 2枚**(RTX 5070 × 2、WSL2)で vLLM 0.32.0 から動かすための一式です。
+**Ternary-Bonsai-2-27B**(27B、重み2bit)を、**12GB の GPU 2枚**(RTX 5070 × 2、WSL2)で、**素の vLLM 0.34.0** とプラグインで動かすための一式です(vLLM 本体は書き換えません)。
 
 - OpenAI 互換 API(思考・ツール呼び出し・画像入力)
 - 文脈 131,072 トークン、同時 24 本
@@ -12,14 +12,14 @@
 
 | パス | 内容 |
 |---|---|
-| `setup.sh` | venv 作成 → vLLM 0.32.0 → パッチ → プラグインのフォークを入れる |
-| `requirements-lock.txt` | 動作確認した環境のパッケージの版(vLLM 0.32.0、torch 2.13.0 など200個)をすべて固定 |
-| `vllm-patch/vllm-0.32.0-bonsai.patch` | vLLM 0.32.0 への差分(27ファイル)。OSCAR KV(回転+低ビット)、優先度による追い出し、prefill のステップ上限、埋め込みの SSD 化、WSL2 での KV 退避の修正、TurboQuant 高速化([vllm#53060](https://github.com/vllm-project/vllm/pull/53060) の移植)など |
+| `setup.sh` | venv 作成 → vLLM 0.34.0 → `bonsai_ext` → プラグインのフォークを入れる |
+| `requirements-lock.txt` | 動作確認した環境のパッケージの版(vLLM 0.34.0、torch 2.14.0+cu130 など約200個)をすべて固定 |
+| `bonsai_ext/` | vLLM のプラグイン(`vllm.general_plugins`)。OSCAR KV(回転+低ビット)、優先度による追い出し(`--scheduler-cls`)、prefill のステップ上限、埋め込みの SSD 化、ビジョンタワーの RAM 退避、WSL2 での KV 退避の修正、TurboQuant 高速化([vllm#53060](https://github.com/vllm-project/vllm/pull/53060)・[#53410](https://github.com/vllm-project/vllm/pull/53410) の移植)、VRAM の記録(`--worker-cls`) |
 | `model/prepare_model.sh` | 重みのダウンロード+画像用のビジョンタワー追加+[日本語で学習し直した MTP ヘッド](https://huggingface.co/nakakennnn/Ternary-Bonsai-2-27B-MTP-ja)への差し替え+埋め込みの書き出し |
 | `serve.sh` | 起動スクリプト。機能はすべて環境変数でオン/オフ |
 | `script_ban/` | 指定した文字種(キリル文字など)を出さない logits processor |
 | `ssd_embed/` | 埋め込みを SSD に置くための書き出しスクリプトと、GPU に残す語の一覧 |
-| `turboquant_ext/` | (任意)`turboquant_4bit_nc` を使う場合の CUDA 高速経路 |
+| `turboquant_ext/` | (任意)`turboquant_4bit_nc` を使う場合の CUDA 高速経路(`bonsai_ext` に入る) |
 
 プラグイン: [Nakanokensetsu/bonsai-vllm](https://github.com/Nakanokensetsu/bonsai-vllm/tree/bonsai-tp2-wsl)(`bonsai-tp2-wsl` ブランチ)。[fraserprice/bonsai-vllm](https://github.com/fraserprice/bonsai-vllm) のフォークで、TP=2 対応・int8 prefill・dp4a decode・int8 AllReduce を足したものです。
 
@@ -62,6 +62,7 @@ curl -s http://127.0.0.1:8000/v1/chat/completions -H 'Content-Type: application/
 | `VLLM_PRIO_PREEMPT` | 1 | `priority` の小さい要求が待っていたら、実行中の大きい要求を追い出す |
 | `VLLM_SSD_EMBED_DIR` | `./embed_ssd` | 空にすると埋め込みを全部 GPU に置く |
 | `KV_OFFLOAD` | 1 | GPU から追い出された KV を RAM 2GiB → SSD に退避 |
+| `GDN_PREFILL` | `triton` | GDN 層の prefill カーネル。`flashinfer` は要求ごとに途中保存の枠を取るため、手元では KV プールが約9%減り、速度は同じでした |
 | `TEMPLATE` | なし | チャットテンプレート。私は [froggeric/Qwen-Fixed-Chat-Templates](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates) を使っています |
 
 要求ごとの優先度は、リクエストの JSON に `"priority": 0`(小さいほど先)を入れます。文字種の禁止は `"vllm_xargs": {"ban_scripts": "cyr,arab,thai,hangul,han_simp"}` です。
@@ -69,9 +70,10 @@ curl -s http://127.0.0.1:8000/v1/chat/completions -H 'Content-Type: application/
 ## 注意
 
 - 非公式です。Prism ML・vLLM プロジェクトとは関係ありません。
-- パッチは vLLM **0.32.0 専用**です。ほかの版には当たりません。
+- `bonsai_ext` は vLLM **0.34.0 で確認**しています。一部は vLLM 内部のモジュールを差し替えるため、ほかの版では動かない可能性があります。
+- vLLM 0.32.0 にパッチを当てる旧版は [`v0.32` タグ](https://github.com/Nakanokensetsu/bonsai-27b-wsl-tp2/tree/v0.32)にあります。
 - 出力が素の vLLM と完全に一致するかは確認していません。量子化(KV・int8)による差があります。
 
 ## ライセンス
 
-Apache-2.0。vLLM(Apache-2.0)への差分と、vllm#53060 由来のコードを含みます。モデルの重みは各配布元のライセンスに従ってください。
+Apache-2.0。vLLM(Apache-2.0)由来のファイル(`bonsai_ext/src/bonsai_ext/vendor/`)と、vllm#53060・#53410 由来のコードを含みます。モデルの重みは各配布元のライセンスに従ってください。
