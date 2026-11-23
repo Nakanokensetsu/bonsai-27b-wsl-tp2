@@ -10,6 +10,8 @@ vLLM itself stays unmodified. What this plugin adds and through which hook:
   - VRAM logger + per-rank allocation cap: --worker-cls bonsai_ext.worker.BonsaiWorker
   - SSD embeddings (VLLM_SSD_EMBED_DIR), vision tower CPU offload
     (VLLM_VISION_CPU_OFFLOAD_GB), min_p / logit_bias with MTP: small wrappers below.
+  - SSD KV tier: refresh block mtime on store/load so the prune deletes truly least-recently
+    used blocks first (BONSAI_KV_FS_TOUCH=1, kv_fs_touch.py).
 Every piece is a no-op unless its env var / CLI flag is set, except the module
 replacement, which only matters when a turboquant_* KV dtype is used.
 """
@@ -60,6 +62,7 @@ OWN_ENVS = {
     "VLLM_TQ_TILED_CONT": lambda: int(os.environ.get("VLLM_TQ_TILED_CONT", "0")),
     "VLLM_TQ_GROUPED_DECODE": lambda: os.environ.get("VLLM_TQ_GROUPED_DECODE", ""),
 }
+# (BONSAI_KV_FS_TOUCH is not VLLM_*, so it needs no declaration.)
 
 _done = False
 
@@ -136,4 +139,7 @@ def register() -> None:
     from bonsai_ext import models
 
     models.install()
+    from bonsai_ext import kv_fs_touch
+
+    kv_fs_touch.install()
     logger.info("bonsai_ext: loaded (vendored %d modules, %d OSCAR dtypes)", len(VENDORED), len(OSCAR_DTYPES))

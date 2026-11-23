@@ -14,9 +14,10 @@
 |---|---|
 | `setup.sh` | venv 作成 → vLLM 0.34.0 → `bonsai_ext` → プラグインのフォークを入れる |
 | `requirements-lock.txt` | 動作確認した環境のパッケージの版(vLLM 0.34.0、torch 2.14.0+cu130 など約200個)をすべて固定 |
-| `bonsai_ext/` | vLLM のプラグイン(`vllm.general_plugins`)。OSCAR KV(回転+低ビット)、優先度による追い出し(`--scheduler-cls`)、prefill のステップ上限、埋め込みの SSD 化、ビジョンタワーの RAM 退避、WSL2 での KV 退避の修正、TurboQuant 高速化([vllm#53060](https://github.com/vllm-project/vllm/pull/53060)・[#53410](https://github.com/vllm-project/vllm/pull/53410) の移植)、VRAM の記録(`--worker-cls`) |
+| `bonsai_ext/` | vLLM のプラグイン(`vllm.general_plugins`)。OSCAR KV(回転+低ビット)、優先度による追い出し(`--scheduler-cls`)、prefill のステップ上限、埋め込みの SSD 化、ビジョンタワーの RAM 退避、WSL2 での KV 退避の修正、SSD の KV を使うたびに更新時刻を付け直す処理、TurboQuant 高速化([vllm#53060](https://github.com/vllm-project/vllm/pull/53060)・[#53410](https://github.com/vllm-project/vllm/pull/53410) の移植)、VRAM の記録(`--worker-cls`) |
 | `model/prepare_model.sh` | 重みのダウンロード+画像用のビジョンタワー追加+[日本語で学習し直した MTP ヘッド](https://huggingface.co/nakakennnn/Ternary-Bonsai-2-27B-MTP-ja)への差し替え+埋め込みの書き出し |
 | `serve.sh` | 起動スクリプト。機能はすべて環境変数でオン/オフ |
+| `kvcache_prune.sh` | SSD に退避した KV の掃除(vLLM は自分では消さない)。`serve.sh` が10分ごとに実行 |
 | `script_ban/` | 指定した文字種(キリル文字など)を出さない logits processor |
 | `ssd_embed/` | 埋め込みを SSD に置くための書き出しスクリプトと、GPU に残す語の一覧 |
 | `turboquant_ext/` | (任意)`turboquant_4bit_nc` を使う場合の CUDA 高速経路(`bonsai_ext` に入る) |
@@ -61,7 +62,9 @@ curl -s http://127.0.0.1:8000/v1/chat/completions -H 'Content-Type: application/
 | `PRISM_AR_INT8` | 1 | prefill の AllReduce を int8 で |
 | `VLLM_PRIO_PREEMPT` | 1 | `priority` の小さい要求が待っていたら、実行中の大きい要求を追い出す |
 | `VLLM_SSD_EMBED_DIR` | `./embed_ssd` | 空にすると埋め込みを全部 GPU に置く |
-| `KV_OFFLOAD` | 1 | GPU から追い出された KV を RAM 2GiB → SSD に退避 |
+| `KV_OFFLOAD` | 1 | GPU から追い出された KV を RAM 2GiB → SSD(`./kvcache_ssd`)に退避 |
+| `KV_PRUNE_CAP_GB` | 100 | SSD の KV の上限。超えたら最後に使ったのが古い順に消す(`KV_PRUNE=0` で掃除しない) |
+| `KV_PRUNE_AGE_MIN` | 120 | これだけの分数使われていない KV は消す |
 | `GDN_PREFILL` | `triton` | GDN 層の prefill カーネル。`flashinfer` は要求ごとに途中保存の枠を取るため、手元では KV プールが約9%減り、速度は同じでした |
 | `TEMPLATE` | なし | チャットテンプレート。私は [froggeric/Qwen-Fixed-Chat-Templates](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates) を使っています |
 

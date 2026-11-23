@@ -41,6 +41,14 @@ ARGS=()
 [ -n "$TEMPLATE" ] && ARGS+=(--chat-template "$TEMPLATE")
 if [ "${KV_OFFLOAD:-1}" = 1 ]; then   # KV that falls out of the GPU goes to 2 GiB RAM, then SSD
   mkdir -p "$ROOT/kvcache_ssd"
+  export BONSAI_KV_FS_TOUCH=${BONSAI_KV_FS_TOUCH:-1}   # bonsai_ext: refresh block mtime on use, so the prune below keeps hot blocks
+  # vLLM never deletes SSD blocks: prune every 10 min while this process (vLLM after exec) lives.
+  # Limits: KV_PRUNE_CAP_GB (default 100), KV_PRUNE_AGE_MIN (default 120). KV_PRUNE=0 to disable.
+  if [ "${KV_PRUNE:-1}" = 1 ]; then
+    ( me=$$; while kill -0 "$me" 2>/dev/null; do
+        "$ROOT/kvcache_prune.sh" "$ROOT/kvcache_ssd"; sleep "${KV_PRUNE_INTERVAL_SEC:-600}"
+      done ) >>"$ROOT/kvcache_prune.log" 2>&1 &
+  fi
   ARGS+=(--kv-transfer-config "{\"kv_connector\":\"OffloadingConnector\",\"kv_role\":\"kv_both\",\"kv_connector_extra_config\":{\"spec_name\":\"TieringOffloadingSpec\",\"cpu_bytes_to_use\":2147483648,\"secondary_tiers\":[{\"type\":\"fs\",\"root_dir\":\"$ROOT/kvcache_ssd\"}]}}")
 fi
 
