@@ -5,6 +5,7 @@
 - OpenAI 互換 API(思考・ツール呼び出し・画像入力)
 - 文脈 131,072 トークン、同時 24 本
 - 単独 約95 tok/s、16本同時で合計 約470 tok/s(1本あたり約32)、24本同時で合計 約470 tok/s(1本あたり約21)(手元の実測・vLLM 0.34.0)
+- 2026-11-25: Bonsai 2.5 に切り替え、プロファイルで見つけた3点(GDN `in_proj_ba` の列優先化・MTP ヘッドの FP8 化・小さい prefill の展開なし int8 GEMM)を既定で有効化。単独 107〜114 tok/s(思考あり3問、手元)。同時数を変えた測定は Bonsai 2 のときの値のまま
 
 解説記事: [12GBのGPU2枚で27BのLLMを24人同時に使う(Qiita)](https://qiita.com/nakanokensetsu/items/66e136acefd5a54b2f1d)
 

@@ -19,9 +19,11 @@ export MAX_JOBS=${MAX_JOBS:-1}   # first start compiles CUDA kernels; parallel n
 
 # plugin (prism-ternary fork)
 export PRISM_INT8_PREFILL=${PRISM_INT8_PREFILL:-1}   # int8 GEMM for prefill
-export PRISM_MTP_BF16=${PRISM_MTP_BF16:-1}           # keep the MTP head in bf16
+export PRISM_MTP_BF16=${PRISM_MTP_BF16:-0}           # 0 = MTP head in fp8 (Bonsai 2.5 ships it as Q4_0)
 export PRISM_DP4A_DECODE=${PRISM_DP4A_DECODE:-1}     # dp4a GEMV when <=4 rows
 export PRISM_AR_INT8=${PRISM_AR_INT8:-1}             # int8 all-reduce during prefill (TP=2)
+export PRISM_BA_COLMAJOR=${PRISM_BA_COLMAJOR:-1}     # column-major GDN in_proj_ba (2-8 rows: 20us -> 4us)
+export PRISM_FUSED_I8_MAX=${PRISM_FUSED_I8_MAX:-384} # int8 prefill without expanding the weight, 65..384 rows
 # scheduler (bonsai_ext.scheduler)
 export VLLM_SOLO_LPT=${VLLM_SOLO_LPT:-1584}          # prefill tokens/step when nobody is decoding
 export VLLM_STEP_PREFILL_CAP=${VLLM_STEP_PREFILL_CAP:-256}  # prefill tokens/step while others decode
