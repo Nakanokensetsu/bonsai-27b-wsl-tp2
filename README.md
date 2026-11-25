@@ -1,6 +1,6 @@
 # bonsai-27b-wsl-tp2
 
-**Ternary-Bonsai-2-27B**(27B、重み2bit)を、**12GB の GPU 2枚**(RTX 5070 × 2、WSL2)で、**素の vLLM 0.34.0** とプラグインで動かすための一式です(vLLM 本体は書き換えません)。
+**Ternary-Bonsai-2.5-27B**(27B、重み2bit。2026-11-24 公開の公式 2.5 を vLLM 形式に変換した [nakakennnn/Ternary-Bonsai-2.5-27B-vllm](https://huggingface.co/nakakennnn/Ternary-Bonsai-2.5-27B-vllm))を、**12GB の GPU 2枚**(RTX 5070 × 2、WSL2)で、**素の vLLM 0.34.0** とプラグインで動かすための一式です(vLLM 本体は書き換えません)。
 
 - OpenAI 互換 API(思考・ツール呼び出し・画像入力)
 - 文脈 131,072 トークン、同時 24 本
@@ -15,7 +15,7 @@
 | `setup.sh` | venv 作成 → vLLM 0.34.0 → `bonsai_ext` → プラグインのフォークを入れる |
 | `requirements-lock.txt` | 動作確認した環境のパッケージの版(vLLM 0.34.0、torch 2.14.0+cu130 など約200個)をすべて固定 |
 | `bonsai_ext/` | vLLM のプラグイン(`vllm.general_plugins`)。OSCAR KV(回転+低ビット)、優先度による追い出し(`--scheduler-cls`)、prefill のステップ上限、埋め込みの SSD 化、ビジョンタワーの RAM 退避、WSL2 での KV 退避の修正、SSD の KV を使うたびに更新時刻を付け直す処理、TurboQuant 高速化([vllm#53060](https://github.com/vllm-project/vllm/pull/53060)・[#53410](https://github.com/vllm-project/vllm/pull/53410) の移植)、VRAM の記録(`--worker-cls`) |
-| `model/prepare_model.sh` | 重みのダウンロード+画像用のビジョンタワー追加+[日本語で学習し直した MTP ヘッド](https://huggingface.co/nakakennnn/Ternary-Bonsai-2-27B-MTP-ja)への差し替え+埋め込みの書き出し |
+| `model/prepare_model.sh` | 重み(2.5、ビジョンタワー・MTP ヘッド込み)のダウンロード+埋め込みの書き出し。`MODEL=2` で旧 Bonsai 2(ビジョンタワー追加+[日本語で学習し直した MTP ヘッド](https://huggingface.co/nakakennnn/Ternary-Bonsai-2-27B-MTP-ja))|
 | `serve.sh` | 起動スクリプト。機能はすべて環境変数でオン/オフ |
 | `kvcache_prune.sh` | SSD に退避した KV の掃除(vLLM は自分では消さない)。`serve.sh` が10分ごとに実行 |
 | `script_ban/` | 指定した文字種(キリル文字など)を出さない logits processor |
