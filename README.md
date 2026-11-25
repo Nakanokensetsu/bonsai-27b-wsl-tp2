@@ -8,6 +8,7 @@
 - 2026-11-25: Bonsai 2.5 に切り替え、プロファイルで見つけた3点(GDN `in_proj_ba` の列優先化・MTP ヘッドの FP8 化・小さい prefill の展開なし int8 GEMM)を既定で有効化。単独 107〜114 tok/s(思考あり3問、手元)。同時数を変えた測定は Bonsai 2 のときの値のまま
 
 解説記事: [12GBのGPU2枚で27BのLLMを24人同時に使う(Qiita)](https://qiita.com/nakanokensetsu/items/66e136acefd5a54b2f1d)
+Bonsai 2.5 への切り替えと高速化: [公式「Ternary-Bonsai-2.5-27B」をvLLMで動かす(Qiita)](https://qiita.com/nakanokensetsu/items/fbf674ba7285f5505d49)
 
 ## 中身
 
